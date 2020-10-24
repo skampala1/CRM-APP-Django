@@ -18,6 +18,7 @@ from .decorators import unauthenticated_user, allowed_users, admin_only
 
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
+import sys
 
 @unauthenticated_user
 def registerPage(request):
@@ -121,38 +122,45 @@ def products(request):
 
 @login_required(login_url='login')
 #@allowed_users(allowed_roles=['admin'])
-def create_customer(request):
-	# form = CustomerForm()
-	# if request.method == 'POST':
-	# 	print('fdsdf')
-	# 	try:
-	# 		param = request.POST
-	# 		param = param.dict()
-	# 		param['customer_id'] = int(param['customer_id'])
-	# 		obj = Order(**param)
-	# 		obj.save()
-	# 	except:			
-	# 		return HttpResponse("error")
-	# 	return HttpResponse('success')
-	# customers = list(Customer.objects.all().values())
-	# products = list(Product.objects.all().values())
-	# context = {'form': form, 'status': Order.STATUS_L, 'customers': customers, 'products': products,
-	# 		   'units': Order.UNITS}
-	# return render(request, 'accounts/create_customer.html', context)
-
+def create_customer(request):	
 	form = CustomerForm()
 	if request.method == 'POST':
 		form = CustomerForm(request.POST)
-		if form.is_valid():
-			user = form.save()
-			# username = form.cleaned_data.get('username')
-
-
-			messages.success(request, 'Account was created for')
-
-			return redirect('/')
+		param = request.POST
+		contactPersonNames = param.getlist("contact_person_name[]")
+		contactPersonMobiles = param.getlist("contact_person_mobile[]")
+		param = param.dict()	
 		
+		try:
+			if form.is_valid():
+				print("contactPersonNames", contactPersonNames)
+				print("contactPersonMobiles", contactPersonMobiles)
+				user = form.save()
 
+				rows = min([len(contactPersonNames), len(contactPersonMobiles)])
+				print("rows", rows)
+				for i in range(0, rows):
+					contactPerson = CustomerContactPerson(
+						# id=None, 
+						name=contactPersonNames[i], 
+						mobile=contactPersonMobiles[i],
+
+						customer=user
+					)
+					print("contactPerson", contactPerson)
+					contactPerson.save()
+
+				company_name = form.cleaned_data.get('company_name')
+				messages.success(request, 'Account was created for ' + company_name)
+
+				return redirect('/')
+			else:
+				print("Errors", form.errors)
+				
+		except Exception as error:
+			print("An exception was thrown!")
+			print(error)
+		
 	context = {'form':form}
 	return render(request, 'accounts/create_customer.html', context)
 
@@ -173,18 +181,18 @@ def customer(request, pk_test):
 
 @login_required(login_url='login')
 #@allowed_users(allowed_roles=['admin'])
-def createOrder(request):
-	form = OrderForm()
-	if request.method == 'POST':
-		try:
-			param = request.POST
-			param = param.dict()
-			param['customer_id'] = int(param['customer_id'])
-			obj = Order(**param)
-			obj.save()
-		except:
-			return HttpResponse("error")
-		return HttpResponse('success')
+def create_order(request):
+	form = OrderForm(request.POST)
+	param = request.POST
+	param = param.dict()
+	print(param)
+			#param['company_name'] = int(param['company_name'])
+	obj = Order(**param)
+	obj.save()
+	
+	#return JsonResponse('success')
+	#return HttpResponse('success')
+
 	customers = list(Customer.objects.all().values())
 	products = list(Product.objects.all().values())
 	context = {'form': form, 'status': Order.STATUS_L, 'customers': customers, 'products': products,

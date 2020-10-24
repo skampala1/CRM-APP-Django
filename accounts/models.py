@@ -4,8 +4,6 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class Customer(models.Model):
-	# user = models.OneToOneField(User, null=True, blank=True, on_delete=models.CASCADE)
-
 	company_name = models.CharField(max_length=200, null=True)
 	telephone = models.CharField(max_length=200, null=True)
 	email = models.CharField(max_length=200, null=True)
@@ -17,15 +15,23 @@ class Customer(models.Model):
 	country = models.CharField(max_length=200, null=True)
 	poboxno = models.CharField(max_length=200, null=True)
 	postoffice = models.CharField(max_length=200, null=True)
-	contact_person1= models.CharField(max_length=200, null=True)
-	mobile1= models.CharField(max_length=200, null=True)
-	contact_person2= models.CharField(max_length=200, null=True)
-	mobile2= models.CharField(max_length=200, null=True)
 
 	date_created = models.DateTimeField(auto_now_add=True, null=True)
 
 	def __str__(self):
 		return self.company_name
+
+
+class CustomerContactPerson(models.Model):
+	
+	name = models.CharField(max_length=200, null=True)
+	mobile = models.CharField(max_length=20, null=True)
+	date_created = models.DateTimeField(auto_now_add=True, null=True)
+
+	customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return self.name
 
 
 class Tag(models.Model):
@@ -36,13 +42,14 @@ class Tag(models.Model):
 
 class Product(models.Model):
 	CATEGORY = (
-			('Indoor', 'Indoor'),
-			('Out Door', 'Out Door'),
-			) 
+		('Indoor', 'Indoor'),
+		('Out Door', 'Out Door'),
+	) 
 
 	name = models.CharField(max_length=200, null=True)
 	brand = models.CharField(max_length=200, null=True)
 	code = models.CharField(max_length=200, null=True)
+	size = models.CharField(max_length=200, null=True)
 	price = models.FloatField(null=True)
 	category = models.CharField(max_length=200, null=True, choices=CATEGORY)
 	description = models.CharField(max_length=200, null=True, blank=True)
@@ -62,12 +69,12 @@ class Order(models.Model):
 		'Pending', 'Out for delivery', 'Delivered'
 	]
 	UNITS = [
-		{"name": "Ton", 'val': 1000},
-		{"name": "Kg", 'val': 1}
+		{"name": "Ton", 'val': 1000}
 	]
-	Date = models.DateField()
+
+	Date = models.DateField(null=True)
 	order_no = models.CharField(max_length=200, null=True)
-	order_name = models.CharField(max_length=200, null=True)
+	company_name = models.CharField(max_length=200, null=True)
 	tel_phone = models.CharField(max_length=200, null=True)
 	street = models.CharField(max_length=200, null=True)
 	city = models.CharField(max_length=200, null=True)
@@ -81,15 +88,39 @@ class Order(models.Model):
 	price = models.CharField(max_length=200, null=True)
 	qty = models.CharField(max_length=200, null=True)
 	discount = models.CharField(max_length=200, null=True)
+	total = models.CharField(max_length=200, null=True)
+	sub_total = models.CharField(max_length=200, null=True)
 	status = models.CharField(max_length=200, null=True, choices=STATUS)
+	vat = models.CharField(max_length=200, null=True)
+	transport_charge = models.CharField(max_length=200, null=True)
+	grand_total = models.CharField(max_length=200, null=True)
+	payment_terms = models.CharField(max_length=200, null=True)
+	collection_terms = models.CharField(max_length=200, null=True)
+	delivery_to = models.CharField(max_length=200, null=True)
+
+	delivery_days = models.CharField(max_length=200, null=True)
+	notes = models.CharField(max_length=300, null=True)
 	#customer = models.ForeignKey(Customer, on_delete= models.SET_NULL, null=True)
-	customer_id = models.IntegerField(blank=True, default=0)
+	sales_person = models.CharField(max_length=200, null=True)
 	date_created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+	def __str__(self):
+		return str(self.order_no)
+
+
+class Lead(models.Model):
+
+	order = models.ForeignKey(Order, on_delete= models.SET_NULL, null=True)
 
 
 	def __str__(self):
-		return str(self.order_name)
+		return str(self.order)
+
+class Deal(models.Model):
+
+	deal = models.ForeignKey(Lead, on_delete= models.SET_NULL, null=True)
 
 
+	def __str__(self):
+		return str(self.deal)
 
-	
